@@ -1,0 +1,29 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div style="margin-bottom: 30px; padding: 20px; background-color: #f0f8ff; border: 2px solid #28a745; border-radius: 10px;">
+    <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; justify-content: space-between;">
+        
+        <!-- Левая часть: форма поиска -->
+        <div style="flex: 2;">
+            <h2 style="color: #28a745; margin-top: 0; margin-bottom: 15px;">🔍 Быстрый поиск по госномеру</h2>
+            <form method="GET" action="/search/" style="display: flex; gap: 10px; max-width: 500px;">
+                <input type="text" name="license_plate" placeholder="Введите госномер (например, А123БВ777)" 
+                       style="flex: 1; padding: 12px; font-size: 16px; border: 2px solid #28a745; border-radius: 5px;">
+                <button type="submit" style="padding: 12px 25px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                    Найти
+                </button>
+            </form>
+        </div>
+        
+        <!-- Правая часть: кнопка отчётов -->
+        <div>
+            <a href="/reports/" style="display: inline-block; padding: 12px 25px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">
+                📊 Отчёты и статистика
+            </a>
+        </div>
+        
+    </div>
+</div>
+{{ block.super }}
+{% endblock %}

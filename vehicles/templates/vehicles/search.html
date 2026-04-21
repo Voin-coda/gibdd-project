@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поиск транспортного средства</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .search-form input {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        .search-form button {
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .search-form button:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .result {
+            background-color: #e9ecef;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .result h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .info-row {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: white;
+            border-radius: 3px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            display: inline-block;
+            width: 150px;
+        }
+        .owner-info {
+            background-color: #d4edda;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .restriction-info {
+            background-color: #f8d7da;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            border-left: 4px solid #dc3545;
+        }
+        .restriction-info h3 {
+            color: #dc3545;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .restriction-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 3px;
+        }
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Поиск транспортного средства</h1>
+        
+        <form method="POST" class="search-form">
+            {% csrf_token %}
+            <input type="text" name="license_plate" placeholder="Введите госномер (например, А123БВ777)" required>
+            <button type="submit">Найти</button>
+        </form>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        {% if vehicle %}
+            <div class="result">
+                <h2>🚗 Найдено транспортное средство</h2>
+                
+                <div class="info-row">
+                    <span class="info-label">Госномер:</span>
+                    {{ vehicle.license_plate }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">VIN:</span>
+                    {{ vehicle.vin }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Марка:</span>
+                    {{ vehicle.brand }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Модель:</span>
+                    {{ vehicle.model }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Год выпуска:</span>
+                    {{ vehicle.year }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Цвет:</span>
+                    {{ vehicle.color }}
+                </div>
+
+                {% if registration %}
+                    <div class="owner-info">
+                        <h3>👤 Текущий владелец</h3>
+                        <div class="info-row">
+                            <span class="info-label">ФИО:</span>
+                            {{ registration.owner.full_name }}
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Паспорт:</span>
+                            {{ registration.owner.passport }}
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Телефон:</span>
+                            {{ registration.owner.phone|default:"не указан" }}
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Дата регистрации:</span>
+                            {{ registration.reg_date }}
+                        </div>
+                    </div>
+                {% else %}
+                    <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                        ⚠️ На данное ТС нет активной регистрации
+                    </div>
+                {% endif %}
+
+                <!-- Блок ограничений -->
+                {% if restrictions %}
+                    <div class="restriction-info">
+                        <h3>⚠️ Действующие ограничения</h3>
+                        {% for restriction in restrictions %}
+                            <div class="restriction-item">
+                                <strong>🚫 {{ restriction.get_restriction_type_display }}</strong>
+                                {% if restriction.document_number %}
+                                    <span style="color: #666;"> (док. {{ restriction.document_number }})</span>
+                                {% endif %}
+                                <br>
+                                <span style="font-size: 14px;">📅 с {{ restriction.start_date }}</span>
+                                {% if restriction.end_date %}
+                                    <span> по {{ restriction.end_date }}</span>
+                                {% endif %}
+                                {% if restriction.initiator %}
+                                    <br>
+                                    <span style="color: #666;">👮 Инициатор: {{ restriction.initiator }}</span>
+                                {% endif %}
+                                {% if restriction.description %}
+                                    <br>
+                                    <span style="color: #666;">📝 {{ restriction.description }}</span>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <a href="/admin" class="back-link">← Вернуться в админку</a>
+    </div>
+</body>
+</html>
